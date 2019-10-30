@@ -1,0 +1,14 @@
+#TeXlipse project settings
+#Thu Oct 03 12:26:06 EDT 2019
+markTmpDer=true
+builderNum=2
+outputDir=bin
+makeIndSty=
+bibrefDir=
+outputFormat=pdf
+tempDir=tmp
+mainTexFile=main.tex
+outputFile=shaman_paper_2019.pdf
+langSpell=en
+markDer=true
+srcDir=src
