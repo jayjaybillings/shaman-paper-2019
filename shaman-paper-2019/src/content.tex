@@ -1,0 +1,273 @@
+Introduction and Organization
+
+This report is a status update on the progress of software development for data reduction software
+for the small-angle neutron scattering (SANS) instruments at Oak Ridge National Laboratory’s
+(ORNL’s) High Flux Isotope Reactor (HFIR) and Spallation Neutron Source (SNS). This software was
+developed in response to findings from the 2018 triennial review of HFIR and SNS and as part of the
+Software Development Plan for SNS and HFIR (“the plan”) that was reviewed in July 2019 and approved
+in October 2019. This document is provided to answer the Department of Energy Basic Energy Sciences’
+request to provide a summary status report by December 31, 2019.
+
+The following sections provide information on the two primary parts of the SANS reduction software:
+the Shaman web interface and the Data Reduction Toolkit for SANS (drt-sans). Both packages were
+developed with feedback from users and instrument scientists. The instrument scientists joined the
+development team as product owners in the software development process. In this role, the instrument
+scientists provided tests and, in some cases, wrote test code for drt-sans. Tests and reduction code
+were validated by members of the instrument team once implemented in drt-sans. The instrument
+scientists also provided detailed design guidelines for the layout and contents of the configuration
+tools provided in Shaman. Specific design choices for Shaman and drt-sans were made based on user
+feedback gathered in May and June 2019, including feedback gathered during a lunch session at the
+annual SNS-HFIR User Group meeting. Drt-sans was used during instrument commissioning for the
+General-Purpose SANS Diffractometer (GP-SANS) and Biological SANS Instrument (Bio-SANS) when HFIR
+returned to operations in November 2019. Shaman has since been used with data gathered during
+commissioning.
+
+Shaman and drt-sans were developed jointly between the Scientific Computing and Software Engineering
+(SCSE) group in the Neutron Scattering Division and the Research Software Engineering (RSE) group in
+the Computer Science and Mathematics Division. These two groups are matrixed together through a
+common group leader (Billings) and share staff, computational resources, and a common development
+process. Successful completion of the development effort was greatly facilitated by this
+organizational structure. The development team uses an Agile, test-driven development process that
+requires strong engagement with stakeholders and users to deliver state-of-the-art solutions.
+
+The first section describes the new web interface, Shaman, that provides a uniform and easy-access
+graphical user interface (UI) that users can access from their normal web browsers to reduce data
+for the Bio-SANS, Extended Q-Range SANS (EQ-SANS), and GP-SANS instruments. Shaman does not require
+any programming skills or detailed knowledge of the reduction software it executes, and it does not
+require users to install software. It greatly simplifies the reduction workflow for users by
+integrating the reduction software into a single tool that functions for all three SANS instruments
+and uses existing, common mechanisms for data archiving and cataloging.
+
+The second section describes drt-sans, which includes all necessary code for reducing raw, measured
+SANS data to quantities—such as the scattering intensity I(q)—that are ready for analysis and
+interpretation. Drt-sans is a command line program that takes a simple input file containing all the
+basic information about an experiment and desired operations in the reduction process and produces
+fully reduced data. The output of drt-sans includes numerical data files, images, and interactive
+plots that are saved in a shared file system and read by Shaman for users to inspect. This package
+relies heavily on the MANTID data reduction framework for neutron scattering but was designed such
+that Shaman can issue data reduction jobs remotely on the ORNL neutrons analysis cluster.
+
+Shaman: The Web Interface for SANS Data Reduction
+
+Motivation and Significance
+
+Development efforts for UI libraries and frameworks dedicated to desktop and workstation software
+have virtually stalled compared with modern web UI frameworks. User expectations for most software
+packages center on one experience: is the software available as a reactive web or mobile
+application? The interest in such a deployment mechanism comes from the convenience of immediate use
+and the lack of any installation time or maintenance. 
+
+The same preferences can be found with users of neutron scattering facilities—such as HFIR and
+SNS—who have significantly compressed schedules during their visits. The demands of their
+experiments leave little time for complicated software and installation procedures. Furthermore,
+when these users return to their institutions, debugging remote issues on native desktop software
+can be extremely time consuming, if not impossible, for the development team. In contrast to their
+native counterparts, web UIs have no installation time, and problems are relatively easy to diagnose
+remotely. Web UIs also have the added benefit of central deployment in which fixing a bug for one
+user immediately fixes the bug for all users (to within cache refresh times).
+
+Shaman is a new web interface for data reduction for the Bio-SANS, EQ-SANS, and GP-SANS instruments
+at HFIR and SNS. Fundamental goals of its development include quick turnaround for users and easy
+access to data. This includes streamlining the workflow to quickly and reactively prepare the
+reduction configuration needed to reduce the data, as well as integrated interactive visualization
+and data export tools for working with that data. The user experience across all three instruments
+is the same with identification of the specific instrument required only for gathering the correct
+data and launching the correct reduction program on the server. 
+
+Software Description
+
+The primary workflow of Shaman begins with user authentication and instrument selection. Once the
+instrument is selected, users are presented with the list of experiments associated with their
+account in a proposal tracking system. Experiment selection is followed by parameter configuration
+and the selection of individual runs from the experiment that will be used as part of the reduction.
+Each run is further distinguished by the order in which it should be reduced and whether or not the
+output of reducing that run should be combined with its peers through stitching, such as would be
+done for samples measured with multiple configurations of an instrument to obtain a larger
+measurement range. When all data reduction runs are appropriately configured, the data are reduced
+by calling the reduction code on the remote analysis server. Users are provided with live feedback
+on the status of the reduction workflow. The reduced data for all runs are available for user
+inspection after the reduction is complete. 
+
+Shaman has three deployments on ORNL’s servers, including development, quality assurance testing,
+and production installations for developers, testers, and users, respectively. Each instance is
+authenticated against ORNL’s eXternal Centralized Access Management System (XCAMS) so that users can
+identify themselves with the same credentials they use for the other systems at the facilities. The
+installations are hosted across various servers at ORNL depending on needs for availability and
+uptime requirements. For example, the development installation is hosted on a machine with a very
+flexible configuration. The production installation, by comparison, is hosted on a highly stable,
+virtualized, and load-balanced cluster in ORNL’s private cloud, the Compute Advanced Data
+Environment for Science (CADES), and is designed to handle far greater amounts of traffic than
+either the development or testing servers. Installation of software for each deployment is done
+automatically without developer involvement using continuous integration/continuous deployment tools
+and techniques. The Shaman servers are separate from the servers on which the data reduction code is
+executed by design. Shaman has its own dedicated computational resources that do not detract from
+the considerable amount of memory and computational resources required by the reduction code, which
+is run on ORNL’s neutron data analysis cluster. Shaman executes the reduction code using a remote
+command framework from the Eclipse Integrated Computational Environment, which was also developed at
+ORNL as a tool for managing interactive workflows.
+
+Shaman was developed in the Java programming language, version 11.0, using the Vaadin framework,
+version 14.0. Vaadin is a framework for making responsive web UIs. The core strength of Vaadin is
+its ability to “transcode” normal Java code compiled on the web server into client-side JavaScript
+that is served to users at the page request time, which makes it possible to use an enterprise
+language such as Java for both the UI business logic and the code that draws the UI on the screen.
+Shaman also uses the Spring framework for tasks not specifically related to drawing views. Spring is
+a framework for building Java web services and provides several important functions to Shaman,
+including authentication and service resolution. Compilation is handled with Maven, a popular Java
+build system. Once compiled, the application is executed in the same way as any other Java-based web
+server.
+
+Visualization in Shaman is provided for users to inspect their raw and reduced data. Users can
+access available plots statically or interactively for closer inspection of fine features.
+Visualization is performed using the mpld3 library coupled to Vaadin. The mpld3 library creates
+plots using Matplotlib and converts those plots to the d3 JavaScript visualization library.
+
+All data is available for users to download to their own machine, including raw data, configuration
+files, reduced data, static images, and files used by the interactive plotting engine. Users can
+simply click an onscreen button to download an archive file in the popular Zip format that contains
+all of this information.
+
+Future of the Shaman Platform
+
+The Shaman platform is a promising step in the right direction for providing users with easy-to-use
+web tools for reducing data at HFIR and SNS. Shaman was designed with multiple instruments in mind
+and was implemented with standard languages and tools for creating advanced web platforms.
+Therefore, much of its code can be reused for instruments that are outside of the SANS instrument
+suite with only a very minor and reasonable amount of refactoring. The software is also highly
+maintainable because it was developed using community frameworks and does not rely on large amounts
+of custom code for common services.
+
+The diffraction instruments at HFIR and SNS are expected to be the first suite of instruments
+outside of SANS for which the code in Shaman will be reused. Furthermore, reusing Shaman for this
+purpose is expected to not only provide a desirable user experience with advanced tooling but also
+to be highly efficient because some amount of UI code is common across all instrument techniques.
+Data Reduction Toolkit for SANS
+
+Motivation and Significance
+
+The drt-sans effort sprung from a realization that the three SANS instruments at HFIR and SNS were
+using separate tools for data reduction, which is also true at other neutron scattering facilities.
+However, there are significant overlaps in the instrument design and physics of these instruments.
+Bio-SANS and GP-SANS are nearly identical, with the largest design difference being that GP-SANS has
+a longer detector tank and Bio-SANS has an additional wing detector. EQ-SANS, although a
+time-of-flight instrument instead of a monochromatic SANS, shares many physical features with the
+GP-SANS and Bio-SANS instruments and uses the same underlying data reduction concepts as the other
+instruments. Thus, there is no need for three separate frameworks for data reduction, and much
+efficiency can be gained from a single, unified framework.
+
+Another important aspect of the development of drt-sans is that it does not strictly require a
+graphical UI for users to execute it (i.e., it is headless). The significance of this design choice
+is that it allows for computational resources to be allocated specifically and separately for
+reduction performed with drt-sans and graphical UI activities performed by other tools. Previous
+reduction tools for SANS at SNS and HFIR were plagued by issues commonly found when mathematical
+routines are connected to outdated or large graphical tool suites. Common errors and bugs, such as
+UI thread locks while waiting for work to complete, simply do not exist for drt-sans and its
+companion web interface, Shaman.
+
+Software Description
+
+The reduction workflow in drt-sans across the three instruments is largely the same, having only
+minor differences for instrument-specific features. Bio-SANS is an example of this because it has
+the extra wing detector that must be dealt with in addition to the primary detector. Broadly, the
+data reduction process executes as follows. First, all input parameters and physical configuration
+details are loaded and rectified. Next, the data are loaded and the beam center computed. The
+reduction process then begins with special preparations and corrections applied to the data
+including transmission correction, background subtraction, and normalization. The data are then
+converted separately to scalar and azimuthal forms, and the scattering intensity I(q) is computed
+for each form. 
+
+The drt-sans software is written in Python, which is a flexible programming language well suited to
+scientific problems, and which is also easily modified when things change quickly. It is built on
+the MANTID data reduction framework, which is developed and maintained by an international
+collaboration of neutron scattering user facilities for multiple instrument techniques includes
+SANS, diffraction, and spectroscopy. As part of the development for drt-sans, several MANTID
+algorithms were updated. In the final steps of data reduction, the lack of a dedicated structure to
+hold information about both momentum and resolution has proved limiting, so custom classes based on
+the NumPy libraries were created. The custom data structures are mixed strategically with the MANTID
+workspaces to maximize performance and code reuse from community tools, which are well tested and
+accepted. Extensive in- and out-of-source documentation is provided for drt-sans. The documentation
+is auto-generated from the source code using the Sphinx documentation engine and is hosted on
+user-accessible servers. Each documentation page links to related documentation as well as to
+related source code.
+
+Drt-sans has multiple deployments for users at ORNL. Development, quality assurance testing, and
+production versions are available with production versions including native compiled binaries that
+can be executed directly on Linux, Docker containers for virtualized environments, and Conda
+packages that can be used natively but that do not require a particular version of the Linux
+operating system. These packages are deployed on workstations, the neutrons analysis cluster, and
+the ORNL Neutrons Jupyter Python Notebook server, all of which are available to users. Docker
+containers, which encapsulate programs so they can run virtually on systems with different and
+possibly unsuitable software configurations, for drt-sans are used by both developers and users. The
+compiled binaries are used on the analysis cluster and are called by the Shaman web UI when it
+provisions reduction tasks. While providing many different releases may seem confusing, it has its
+purpose. First, having a diverse set of production releases is necessary to cover all common use
+cases. Jupyter notebooks, for example, are an excellent fit for exploratory and educational uses of
+the software compared with the native builds, which need to be optimized and deployed for constant
+execution. Second, having development and testing builds facilitates the change management process
+without interfering with stable production builds that are relied on by users for reduction.
+
+Data files are generated by drt-sans when the reduction scripts finish execution. The output
+includes numerical data files in formats suitable for data analysis, static images, and files that
+can be used to make interactive images with the Shaman web interface. Additionally, the output
+includes the scattering intensity for all detectors in both scalar (one-dimensional) and azimuthal
+(two-dimensional) representations. 
+
+Future of the drt-sans platform 
+
+In many ways, the drt-sans platform represents a more compact and modular way of working with
+algorithms already present in the MANTID framework and other libraries. There is significant market
+pressure for software to become smaller, more flexible, and more service oriented, which is
+different from years past in which large frameworks dominated ecosystems. 
+
+Some parts of the drt-sans code can be reused for instruments that are outside of the SANS
+instrument suite with only a very minor and reasonable amount of refactoring. However, much of the
+drt-sans code base is highly specific to the SANS instrument technique. Core physical (wavelength)
+and mathematical algorithms (binning) will be easy to reuse. These reusable parts, as well as the
+general architecture of drt-sans, will form the basis and pattern for other packages in what will
+become a larger data reduction toolkit that reaches across instrument suites. 
+
+Examples
+
+This section presents two examples of data that have been reduced using Shaman and drt-sans for the
+instruments at SNS and HFIR. 
+
+Silver Behenate (Ag-Be) on Bio-SANS and GP-SANS
+
+As part of commissioning exercises when HFIR restarted in October 2019, the Bio-SANS and GP-SANS
+teams performed experiments using Ag-Be. Ag-Be has 13 well-characterized diffraction peaks and can
+be used in a variety of instruments to measure their performance during calibration. The following
+image shows the two-dimensional scattering intensity of Ag-Be in the Bio-SANS main detector as
+viewed in Shaman.
+
+<INSERT-IMAGE:BIOSANS-IQXY>
+
+The two-dimensional scattering intensity for the Bio-SANS wing detector can also be studied, as
+shown in the following image.
+
+<INSERT-IMAGE:BIOSANS-WING-DETECTOR>
+
+Porous Silica Standard (Porasil B) on EQ-SANS
+
+The following image shows a comparison between the data for a form of porous silica (porasil B)
+using the old (pure MANTID) and new (drt-sans) data reduction codes. Porasil B is used for
+calibration on EQ-SANS because of its stability and high scattering cross-section.
+
+<INSERT-IMAGE: PORASIL>
+
+Acknowledgments
+
+The authors gratefully acknowledge the contributions of the following people in the preparation of
+the software and this report. From the RSE and SCSE groups, this includes Jean Bilheux, Jose
+Borreguero-Calvo, Caleb Cooper, Mathieu Doucet, Lance Drane, Ricardo Ferraz-Leal, Steve Hahn, Fahima
+Islam, Jiao Lin, Vickie Lynch, Mark Martin, Marshall McDonnell, Alex Moore, Joseph Osborn, Peter
+Peterson, Andrei Savici, Robert Smith, Ross Whitfield, and Wenduo Zhou. From the SANS Instrument
+Team, this includes Wei-Ren Chen, Lisa Debeer-Schmitt, Changwoo Do, Michael Fitzsimmons, Lilin He,
+William Heller, Ken Littrell, Sai Venkatesh Pingali, Shuo Qian, and Volker Urban, as well as former
+members Matthew Cuneo, Christopher Stanley, and Bin Wu.
+
+This work used resources of HFIR and SNS, which are US Department of Energy Office of Science User
+Facilities operated by Oak Ridge National Laboratory under contract DE-AC05-00OR22725.
+
+
+
+
