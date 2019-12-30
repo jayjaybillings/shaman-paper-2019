@@ -1,0 +1,81 @@
+\section{Software description}
+\label{description}
+
+The primary workflow of Shaman begins with user authentication and instrument selection. Once the
+instrument is selected, users are presented with the list of experiments associated with their
+account in a proposal tracking system. Experiment selection is followed by parameter configuration
+and the selection of individual runs from the experiment that will be used as part of the reduction.
+Each run is further distinguished by the order in which it should be reduced and whether or not the
+output of reducing that run should be combined with its peers through stitching, such as would be
+done for samples measured with multiple configurations of an instrument to obtain a larger
+measurement range. When all data reduction runs are appropriately configured, the data are reduced
+by calling the reduction code on the remote analysis server. Users are provided with live feedback
+on the status of the reduction workflow. The reduced data for all runs are available for user
+inspection after the reduction is complete. 
+
+Shaman has three deployments on ORNL’s servers, including development, quality assurance testing,
+and production installations for developers, testers, and users, respectively. Each instance is
+authenticated against ORNL’s eXternal Centralized Access Management System (XCAMS) so that users can
+identify themselves with the same credentials they use for the other systems at the facilities. The
+installations are hosted across various servers at ORNL depending on needs for availability and
+uptime requirements. For example, the development installation is hosted on a machine with a very
+flexible configuration. The production installation, by comparison, is hosted on a highly stable,
+virtualized, and load-balanced cluster in ORNL’s private cloud, the Compute Advanced Data
+Environment for Science (CADES), and is designed to handle far greater amounts of traffic than
+either the development or testing servers. Installation of software for each deployment is done
+automatically without developer involvement using continuous integration/continuous deployment tools
+and techniques. The Shaman servers are separate from the servers on which the data reduction code is
+executed by design. Shaman has its own dedicated computational resources that do not detract from
+the considerable amount of memory and computational resources required by the reduction code, which
+is run on ORNL’s neutron data analysis cluster. Shaman executes the reduction code using a remote
+command framework from the Eclipse Integrated Computational Environment, which was also developed at
+ORNL as a tool for managing interactive workflows.
+
+Shaman was developed in the Java programming language, version 11.0, using the Vaadin framework,
+version 14.0. Vaadin is a framework for making responsive web UIs. The core strength of Vaadin is
+its ability to “transcode” normal Java code compiled on the web server into client-side JavaScript
+that is served to users at the page request time, which makes it possible to use an enterprise
+language such as Java for both the UI business logic and the code that draws the UI on the screen.
+Shaman also uses the Spring framework for tasks not specifically related to drawing views. Spring is
+a framework for building Java web services and provides several important functions to Shaman,
+including authentication and service resolution. Compilation is handled with Maven, a popular Java
+build system. Once compiled, the application is executed in the same way as any other Java-based web
+server.
+
+Visualization in Shaman is provided for users to inspect their raw and reduced data. Users can
+access available plots statically or interactively for closer inspection of fine features.
+Visualization is performed using the mpld3 library coupled to Vaadin. The mpld3 library creates
+plots using Matplotlib and converts those plots to the d3 JavaScript visualization library.
+
+All data is available for users to download to their own machine, including raw data, configuration
+files, reduced data, static images, and files used by the interactive plotting engine. Users can
+simply click an onscreen button to download an archive file in the popular Zip format that contains
+all of this information.
+
+Future of the Shaman Platform
+
+The Shaman platform is a promising step in the right direction for providing users with easy-to-use
+web tools for reducing data at HFIR and SNS. Shaman was designed with multiple instruments in mind
+and was implemented with standard languages and tools for creating advanced web platforms.
+Therefore, much of its code can be reused for instruments that are outside of the SANS instrument
+suite with only a very minor and reasonable amount of refactoring. The software is also highly
+maintainable because it was developed using community frameworks and does not rely on large amounts
+of custom code for common services.
+
+The diffraction instruments at HFIR and SNS are expected to be the first suite of instruments
+outside of SANS for which the code in Shaman will be reused. Furthermore, reusing Shaman for this
+purpose is expected to not only provide a desirable user experience with advanced tooling but also
+to be highly efficient because some amount of UI code is common across all instrument techniques.
+
+\subsection{Software Architecture}
+\label{}
+
+Give a short overview of the overall software architecture; provide a pictorial component overview or similar (if possible). If necessary provide implementation details.
+
+\subsection{Software Functionalities}
+\label{}
+
+Present the major functionalities of the software.
+
+\subsection{Sample code snippets analysis (optional)}
+\label{}
